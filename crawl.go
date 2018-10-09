@@ -3,6 +3,7 @@ package crawler
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"reflect"
 	"sync"
@@ -86,6 +87,10 @@ func (c *Crawler) NextStep(fun interface{}, args ...interface{}) error {
 
 func (c *Crawler) Log(a ...interface{}) {
 	c.log.Println(a...)
+}
+
+func (c *Crawler) CookieJar() http.CookieJar {
+	return c.cli.GetCookieJar()
 }
 
 func (c *Crawler) Request() *requests.Request {
