@@ -32,7 +32,7 @@ func NewChrome() (*Chrome, error) {
 		// 		WatchPageTargets(ctx),
 		// ),
 		chromedp.WithRunnerOptions(
-			runner.WindowSize(1440, 0),
+			runner.WindowSize(1920, 1080),
 			runner.Headless,
 			runner.DisableGPU,
 			runner.NoSandbox,
