@@ -76,6 +76,7 @@ func (c *Chrome) HTML(url string) ([]byte, error) {
 	var res string
 	err := c.cdp.Run(c.ctx, chromedp.Tasks{
 		chromedp.Navigate(url),
+		waitComplete,
 		chromedp.OuterHTML("html", &res, chromedp.ByQuery),
 	})
 	if err != nil {
@@ -90,7 +91,7 @@ func (c *Chrome) PDF(url string) ([]byte, error) {
 
 	err := c.cdp.Run(c.ctx, chromedp.Tasks{
 		chromedp.Navigate(url),
-		chromedp.Sleep(time.Second * 2),
+		waitComplete,
 		chromedp.ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 			buf, err := page.PrintToPDF().
 				WithMarginTop(0.01).
@@ -119,7 +120,7 @@ func (c *Chrome) Screenshot(url string) ([]byte, error) {
 	var res []byte
 	err := c.cdp.Run(c.ctx, chromedp.Tasks{
 		chromedp.Navigate(url),
-		chromedp.Sleep(time.Second * 2),
+		waitComplete,
 		chromedp.ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 			scr, err := page.CaptureScreenshot().
 				Do(ctx, h)
@@ -136,4 +137,25 @@ func (c *Chrome) Screenshot(url string) ([]byte, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+var waitComplete = chromedp.ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+	state := ""
+	for i := 0; i != 10; i++ {
+		if err := readyState(&state).Do(ctx, h); err != nil {
+			return err
+		}
+		if state == "complete" {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	return nil
+})
+
+func readyState(state *string) chromedp.Action {
+	if state == nil {
+		panic("state cannot be nil")
+	}
+	return chromedp.EvaluateAsDevTools(`document.readyState`, state)
 }
